@@ -1,0 +1,30 @@
+.dart_tool/
+.puro/
+.tooling/dart-sdk/
+.tooling/dartsdk.zip
+build/
+.idea/
+.vscode/
+coverage/
+*.log
+.DS_Store
+
+# Flutter / Dart
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+
+# Android
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+
+# Env / secrets
+.env
+.env.*
+apps/mobile/.env
+supabase/.branches
+supabase/.temp
