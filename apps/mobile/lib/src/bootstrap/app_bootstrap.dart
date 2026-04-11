@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -64,7 +65,11 @@ class AppBootstrap {
     );
 
     if (client != null) {
-      await syncService.syncPending(database, installId: installId);
+      try {
+        await syncService.syncPending(database, installId: installId);
+      } on PostgrestException catch (error) {
+        debugPrint('Supabase sync skipped during bootstrap: ${error.message}');
+      }
     }
 
     return BootstrapBundle(

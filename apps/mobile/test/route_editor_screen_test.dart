@@ -11,26 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('creates a route with the selected difficulty', (tester) async {
     final database = _FakeCarnometerLocalDatabase();
-    final repository = LocalDraftRepository(
-      database: database,
-      installId: 'test-installation',
-    );
-    final bundle = BootstrapBundle(
-      config: const AppConfig(
-        supabaseUrl: '',
-        supabaseAnonKey: '',
-        mapboxAccessToken: '',
-        mapboxStyleUri: 'mapbox://styles/mapbox/streets-v12',
-        mapboxBaseUrl: 'https://api.mapbox.com',
-      ),
-      repository: repository,
-      syncService: const SupabaseSyncService(
-        client: null,
-        mapboxBaseUrl: 'https://api.mapbox.com',
-      ),
-      installId: 'test-installation',
-      isSupabaseEnabled: false,
-    );
+    final bundle = _buildBundle(database: database);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -54,6 +35,33 @@ void main() {
     expect(database.savedRoutes.single.difficulty, RouteDifficulty.expert);
     expect(find.textContaining('Experto'), findsWidgets);
   });
+}
+
+BootstrapBundle _buildBundle({
+  _FakeCarnometerLocalDatabase? database,
+}) {
+  final localDatabase = database ?? _FakeCarnometerLocalDatabase();
+  final repository = LocalDraftRepository(
+    database: localDatabase,
+    installId: 'test-installation',
+  );
+
+  return BootstrapBundle(
+    config: const AppConfig(
+      supabaseUrl: '',
+      supabaseAnonKey: '',
+      mapboxAccessToken: '',
+      mapboxStyleUri: 'mapbox://styles/mapbox/streets-v12',
+      mapboxBaseUrl: 'https://api.mapbox.com',
+    ),
+    repository: repository,
+    syncService: const SupabaseSyncService(
+      client: null,
+      mapboxBaseUrl: 'https://api.mapbox.com',
+    ),
+    installId: 'test-installation',
+    isSupabaseEnabled: false,
+  );
 }
 
 class _FakeCarnometerLocalDatabase extends CarnometerLocalDatabase {

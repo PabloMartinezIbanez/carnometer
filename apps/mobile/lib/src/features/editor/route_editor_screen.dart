@@ -115,173 +115,158 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          AspectRatio(
-            aspectRatio: 1.1,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: widget.bundle.config.hasMapboxToken
-                  ? MapWidget(
-                      key: const ValueKey('route-editor-mapbox-map'),
-                      styleUri: widget.bundle.config.mapboxStyleUri,
-                      cameraOptions: CameraOptions(
-                        center: Point(
-                          coordinates: Position(-3.7038, 40.4168),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mapHeight = (constraints.maxHeight * 0.38).clamp(220.0, 360.0);
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: SizedBox(
+                height: mapHeight,
+                width: double.infinity,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: widget.bundle.config.hasMapboxToken
+                      ? MapWidget(
+                          key: const ValueKey('route-editor-mapbox-map'),
+                          styleUri: widget.bundle.config.mapboxStyleUri,
+                          cameraOptions: CameraOptions(
+                            center: Point(
+                              coordinates: Position(-3.7038, 40.4168),
+                            ),
+                            zoom: 10.4,
+                          ),
+                        )
+                      : Container(
+                          color: const Color(0xFFE7DED1),
+                          padding: const EdgeInsets.all(20),
+                          child: const Center(
+                            child: Text(
+                              'Añade MAPBOX_ACCESS_TOKEN para ver el mapa real de Mapbox.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
-                        zoom: 10.4,
-                      ),
-                    )
-                  : Container(
-                      color: const Color(0xFFE7DED1),
-                      padding: const EdgeInsets.all(20),
-                      child: const Center(
-                        child: Text(
-                          'Añade MAPBOX_ACCESS_TOKEN para ver el mapa real de Mapbox.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Editor de ruta PoC',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'La base ya deja preparado el mapa de Mapbox, el guardado local y el punto de integración para Directions y Map Matching bajo demanda. '
-                    'En esta iteración también puedes registrar rutas rápidas con una dificultad manual mientras llega el editor gestual completo.',
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: const [
-                      Chip(label: Text('Mapbox Maps')),
-                      Chip(label: Text('Directions API')),
-                      Chip(label: Text('Map Matching API')),
-                      Chip(label: Text('Sectores por puertas')),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 12),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   children: [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Nueva ruta',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _nameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nombre de la ruta',
+                                  border: OutlineInputBorder(),
+                                ),
+                                textInputAction: TextInputAction.done,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Introduce un nombre para la ruta.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              DropdownButtonFormField<RouteDifficulty>(
+                                value: _selectedDifficulty,
+                                decoration: const InputDecoration(
+                                  labelText: 'Dificultad',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: RouteDifficulty.values
+                                    .map(
+                                      (difficulty) => DropdownMenuItem<RouteDifficulty>(
+                                        value: difficulty,
+                                        child: Text(difficulty.label),
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                                onChanged: (value) {
+                                  if (value == null) {
+                                    return;
+                                  }
+                                  setState(() {
+                                    _selectedDifficulty = value;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: _isSaving ? null : _saveRoute,
+                                  child: Text(_isSaving ? 'Guardando...' : 'Guardar ruta'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      'Nueva ruta',
+                      'Rutas guardadas',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre de la ruta',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.done,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Introduce un nombre para la ruta.';
+                    const SizedBox(height: 8),
+                    FutureBuilder<List<RouteTemplate>>(
+                      future: _routesFuture,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
                         }
-                        return null;
+
+                        final routes = snapshot.requireData;
+                        return Column(
+                          children: routes
+                              .map(
+                                (route) => Card(
+                                  child: ListTile(
+                                    title: Text(route.name),
+                                    subtitle: Text(
+                                      '${route.isClosed ? 'Circuito cerrado' : 'Ruta abierta'} · '
+                                      '${route.difficulty.label} · '
+                                      '${route.sectors.length} sectores · '
+                                      '${route.effectiveGeometry.length} puntos',
+                                    ),
+                                    trailing: const Icon(Icons.chevron_right),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        );
                       },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<RouteDifficulty>(
-                      value: _selectedDifficulty,
-                      decoration: const InputDecoration(
-                        labelText: 'Dificultad',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: RouteDifficulty.values
-                          .map(
-                            (difficulty) => DropdownMenuItem<RouteDifficulty>(
-                              value: difficulty,
-                              child: Text(difficulty.label),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
-                        setState(() {
-                          _selectedDifficulty = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _isSaving ? null : _saveRoute,
-                        child: Text(_isSaving ? 'Guardando...' : 'Guardar ruta'),
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Rutas guardadas',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          FutureBuilder<List<RouteTemplate>>(
-            future: _routesFuture,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final routes = snapshot.requireData;
-              return Column(
-                children: routes
-                    .map(
-                      (route) => Card(
-                        child: ListTile(
-                          title: Text(route.name),
-                          subtitle: Text(
-                            '${route.isClosed ? 'Circuito cerrado' : 'Ruta abierta'} · '
-                            '${route.difficulty.label} · '
-                            '${route.sectors.length} sectores · '
-                            '${route.effectiveGeometry.length} puntos',
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              );
-            },
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
