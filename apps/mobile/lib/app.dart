@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'src/bootstrap/app_bootstrap.dart';
-import 'src/features/shell/home_shell.dart';
+import 'src/routing/app_router.dart';
 
 class CarnometerApp extends StatefulWidget {
   const CarnometerApp({super.key});
@@ -21,39 +21,55 @@ class _CarnometerAppState extends State<CarnometerApp> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<BootstrapBundle>(
+      future: _bootstrapFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _buildShell(
+            home: const _BootstrapScaffold(
+              title: 'Arrancando Carnometer',
+              subtitle: 'Preparando base local, mapa y sincronización opcional.',
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _buildShell(
+            home: _BootstrapScaffold(
+              title: 'No se pudo iniciar la app',
+              subtitle: snapshot.error.toString(),
+            ),
+          );
+        }
+
+        final router = buildAppRouter(snapshot.requireData);
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'Carnometer',
+          theme: _theme,
+          routerConfig: router,
+        );
+      },
+    );
+  }
+
+  Widget _buildShell({required Widget home}) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Carnometer',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9A3412),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF4EFE8),
-        useMaterial3: true,
-      ),
-      home: FutureBuilder<BootstrapBundle>(
-        future: _bootstrapFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const _BootstrapScaffold(
-              title: 'Arrancando Carnometer',
-              subtitle: 'Preparando base local, mapa y sincronización opcional.',
-            );
-          }
-
-          if (snapshot.hasError) {
-            return _BootstrapScaffold(
-              title: 'No se pudo iniciar la app',
-              subtitle: snapshot.error.toString(),
-            );
-          }
-
-          return HomeShell(bundle: snapshot.requireData);
-        },
-      ),
+      theme: _theme,
+      home: home,
     );
   }
+
+  static final _theme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF9A3412),
+      brightness: Brightness.light,
+    ),
+    scaffoldBackgroundColor: const Color(0xFFF4EFE8),
+    useMaterial3: true,
+  );
 }
 
 class _BootstrapScaffold extends StatelessWidget {

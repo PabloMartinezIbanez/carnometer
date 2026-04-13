@@ -200,6 +200,33 @@ class CarnometerLocalDatabase {
     );
   }
 
+  Future<void> deleteRouteTemplate(String id) async {
+    final db = await _db;
+    await db.delete('route_templates', where: 'id = ?', whereArgs: [id]);
+    await db.delete(
+      'sync_queue',
+      where: 'entity_type = ? AND entity_id = ?',
+      whereArgs: ['route_template', id],
+    );
+  }
+
+  Future<List<SessionRun>> loadSessionRunsByRouteId(String routeId) async {
+    final db = await _db;
+    final rows = await db.query(
+      'session_runs',
+      orderBy: 'updated_at DESC',
+    );
+
+    return rows
+        .map(
+          (row) => SessionRun.fromJson(
+            jsonDecode(row['payload'] as String) as Map<String, dynamic>,
+          ),
+        )
+        .where((session) => session.routeTemplateId == routeId)
+        .toList();
+  }
+
   Future<void> _enqueue(String entityType, String entityId) async {
     final db = await _db;
     await db.insert(

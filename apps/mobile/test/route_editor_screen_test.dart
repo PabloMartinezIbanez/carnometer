@@ -9,31 +9,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('creates a route with the selected difficulty', (tester) async {
+  testWidgets('save button is disabled until 2+ waypoints are added', (tester) async {
     final database = _FakeCarnometerLocalDatabase();
     final bundle = _buildBundle(database: database);
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: RouteEditorScreen(bundle: bundle),
-        ),
+        home: RouteEditorScreen(bundle: bundle),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).first, 'Puerto de Navacerrada');
-    await tester.tap(find.text('Facil'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Experto').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Guardar ruta'));
-    await tester.pumpAndSettle();
+    // The save icon button should be disabled when no waypoints exist
+    final saveButton = find.byIcon(Icons.save);
+    expect(saveButton, findsOneWidget);
 
-    expect(database.savedRoutes, hasLength(1));
-    expect(database.savedRoutes.single.name, 'Puerto de Navacerrada');
-    expect(database.savedRoutes.single.difficulty, RouteDifficulty.expert);
-    expect(find.textContaining('Experto'), findsWidgets);
+    // Find the IconButton wrapping the save icon
+    final iconButton = tester.widget<IconButton>(
+      find.ancestor(of: saveButton, matching: find.byType(IconButton)),
+    );
+    expect(iconButton.onPressed, isNull, reason: 'Save should be disabled with no waypoints');
   });
 }
 

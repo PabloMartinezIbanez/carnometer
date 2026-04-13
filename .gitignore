@@ -26,6 +26,7 @@ coverage/
 # Env / secrets
 .env
 .env.*
+!.env.example
 apps/mobile/.env
 supabase/.branches
 supabase/.temp

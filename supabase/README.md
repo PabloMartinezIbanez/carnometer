@@ -3,9 +3,19 @@
 ## Local workflow
 
 1. Install the Supabase CLI.
-2. Link or start a local project.
-3. Apply all migrations in `supabase/migrations/`.
-4. If your local stack was already running when a new migration was added, reset or update it before using the mobile app again:
+2. Configure local auth secrets in the root `.env` file (see `.env.example`).
+3. Start Supabase using the secure wrapper script:
+
+```powershell
+./supabase/start-local-secure.ps1
+```
+
+This creates (if needed) a Docker network that binds published ports to `127.0.0.1` and starts Supabase on that network.
+By default in this repo, Studio and analytics are disabled in `supabase/config.toml` for safer local defaults.
+If you need Studio temporarily, set `studio.enabled = true` and restart.
+4. Link or use your local project as needed.
+5. Apply all migrations in `supabase/migrations/`.
+6. If your local stack was already running when a new migration was added, reset or update it before using the mobile app again:
 
 ```bash
 supabase db reset
@@ -23,7 +33,7 @@ At the moment the mobile client expects both:
 - `20260412_add_route_difficulty.sql`
 
 If `route_templates.difficulty` is missing locally, route sync will fail with a PostgREST error about the missing `difficulty` column.
-5. Deploy the `mapbox-routing` edge function and configure:
+7. Deploy the `mapbox-routing` edge function and configure:
 
 - `MAPBOX_SECRET_TOKEN`
 - `MAPBOX_BASE_URL` (optional, defaults to `https://api.mapbox.com`)
