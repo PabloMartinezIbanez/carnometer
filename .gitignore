@@ -1,4 +1,5 @@
 .dart_tool/
+.worktrees/
 .puro/
 .tooling/dart-sdk/
 .tooling/dartsdk.zip
