@@ -6,5 +6,5 @@ import 'app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('es_ES');
-  runApp(const CarnometerApp());
+  runApp(const SplitwayApp());
 }

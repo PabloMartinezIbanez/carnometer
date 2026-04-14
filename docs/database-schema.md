@@ -409,6 +409,6 @@ Si lo reduces a una idea por tabla:
 ## Referencias de implementación
 
 - Migración SQL remota: [20260410_initial_schema.sql](../supabase/migrations/20260410_initial_schema.sql)
-- Persistencia local SQLite: [carnometer_local_database.dart](../apps/mobile/lib/src/data/local/carnometer_local_database.dart)
+- Persistencia local SQLite: [splitway_local_database.dart](../apps/mobile/lib/src/data/local/splitway_local_database.dart)
 - Sincronización con Supabase: [supabase_sync_service.dart](../apps/mobile/lib/src/data/repositories/supabase_sync_service.dart)
 - Arquitectura general: [architecture-poc.md](./architecture-poc.md)

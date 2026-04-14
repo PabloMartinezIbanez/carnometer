@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:carnometer_core/carnometer_core.dart';
+import 'package:splitway_core/splitway_core.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
 
@@ -14,7 +14,7 @@ class PendingSyncItem {
   final String entityId;
 }
 
-class CarnometerLocalDatabase {
+class SplitwayLocalDatabase {
   Database? _database;
 
   Future<void> open() async {
@@ -23,7 +23,7 @@ class CarnometerLocalDatabase {
     }
 
     final databasePath = await getDatabasesPath();
-    final fullPath = path.join(databasePath, 'carnometer.db');
+    final fullPath = path.join(databasePath, 'splitway.db');
 
     _database = await openDatabase(
       fullPath,

@@ -1,4 +1,4 @@
-# Carnometer PoC Architecture
+# Splitway PoC Architecture
 
 ## Core decisions
 
@@ -10,7 +10,7 @@
 
 ## Main building blocks
 
-- `carnometer_core`
+- `splitway_core`
   - Owns route/session models and tracking rules.
   - Can be tested without Flutter.
 - `apps/mobile`

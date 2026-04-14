@@ -65,13 +65,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  carnometer_core:
-    dependency: "direct main"
-    description:
-      path: "../../packages/carnometer_core"
-      relative: true
-    source: path
-    version: "0.1.0"
   characters:
     dependency: transitive
     description:
@@ -716,6 +709,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.2"
+  splitway_core:
+    dependency: "direct main"
+    description:
+      path: "../../packages/splitway_core"
+      relative: true
+    source: path
+    version: "0.1.0"
   sqflite:
     dependency: "direct main"
     description:

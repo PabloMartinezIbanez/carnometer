@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:carnometer_core/carnometer_core.dart';
+import 'package:splitway_core/splitway_core.dart';
 
-import '../local/carnometer_local_database.dart';
+import '../local/splitway_local_database.dart';
 
 class LocalDraftRepository {
   LocalDraftRepository({
@@ -10,7 +10,7 @@ class LocalDraftRepository {
     required this.installId,
   });
 
-  final CarnometerLocalDatabase database;
+  final SplitwayLocalDatabase database;
   final String installId;
 
   static final _random = Random();

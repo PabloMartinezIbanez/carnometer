@@ -1,4 +1,4 @@
-import 'package:carnometer_core/carnometer_core.dart';
+import 'package:splitway_core/splitway_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';

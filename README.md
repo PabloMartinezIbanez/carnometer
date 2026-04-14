@@ -1,10 +1,10 @@
-# Carnometer
+# Splitway
 
-Carnometer is an Android-first proof of concept for timing car routes with custom sectors, local telemetry capture, and optional cloud sync.
+Splitway is an Android-first proof of concept for timing car routes with custom sectors, local telemetry capture, and optional cloud sync.
 
 ## What is already in this repository
 
-- `packages/carnometer_core`
+- `packages/splitway_core`
   - Pure Dart domain models for routes, sectors, sessions, and telemetry.
   - A tested tracking engine that detects sectors and laps locally on-device.
 - `apps/mobile`
@@ -20,7 +20,7 @@ Carnometer is an Android-first proof of concept for timing car routes with custo
 
 ```text
 apps/mobile              Flutter shell
-packages/carnometer_core Pure Dart timing engine and models
+packages/splitway_core Pure Dart timing engine and models
 supabase                 SQL schema and edge functions
 docs                     Architecture notes
 ```
@@ -30,7 +30,7 @@ docs                     Architecture notes
 The following commands were run successfully during this session:
 
 ```bash
-cd packages/carnometer_core
+cd packages/splitway_core
 ../../.tooling/dart-sdk/dart-sdk/bin/dart test
 ../../.tooling/dart-sdk/dart-sdk/bin/dart analyze
 

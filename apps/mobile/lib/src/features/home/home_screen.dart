@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Carnometer'),
+        title: const Text('Splitway'),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),

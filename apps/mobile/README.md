@@ -1,6 +1,6 @@
-# Carnometer Mobile
+# Splitway Mobile
 
-Flutter shell for the Android-first Carnometer PoC.
+Flutter shell for the Android-first Splitway PoC.
 
 ## Current scope
 

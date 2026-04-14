@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
 import '../data/demo/demo_seed.dart';
-import '../data/local/carnometer_local_database.dart';
+import '../data/local/splitway_local_database.dart';
 import '../data/repositories/local_draft_repository.dart';
 import '../data/repositories/supabase_sync_service.dart';
 
@@ -27,7 +27,7 @@ class BootstrapBundle {
 class AppBootstrap {
   static Future<BootstrapBundle> initialize() async {
     final config = AppConfig.fromEnvironment();
-    final database = CarnometerLocalDatabase();
+    final database = SplitwayLocalDatabase();
     await database.open();
 
     if (config.hasMapboxToken) {

@@ -1,16 +1,16 @@
-import 'package:carnometer_core/carnometer_core.dart';
-import 'package:carnometer_mobile/src/bootstrap/app_bootstrap.dart';
-import 'package:carnometer_mobile/src/config/app_config.dart';
-import 'package:carnometer_mobile/src/data/local/carnometer_local_database.dart';
-import 'package:carnometer_mobile/src/data/repositories/local_draft_repository.dart';
-import 'package:carnometer_mobile/src/data/repositories/supabase_sync_service.dart';
-import 'package:carnometer_mobile/src/features/editor/route_editor_screen.dart';
+import 'package:splitway_core/splitway_core.dart';
+import 'package:splitway_mobile/src/bootstrap/app_bootstrap.dart';
+import 'package:splitway_mobile/src/config/app_config.dart';
+import 'package:splitway_mobile/src/data/local/splitway_local_database.dart';
+import 'package:splitway_mobile/src/data/repositories/local_draft_repository.dart';
+import 'package:splitway_mobile/src/data/repositories/supabase_sync_service.dart';
+import 'package:splitway_mobile/src/features/editor/route_editor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('save button is disabled until 2+ waypoints are added', (tester) async {
-    final database = _FakeCarnometerLocalDatabase();
+    final database = _FakeSplitwayLocalDatabase();
     final bundle = _buildBundle(database: database);
 
     await tester.pumpWidget(
@@ -33,9 +33,9 @@ void main() {
 }
 
 BootstrapBundle _buildBundle({
-  _FakeCarnometerLocalDatabase? database,
+  _FakeSplitwayLocalDatabase? database,
 }) {
-  final localDatabase = database ?? _FakeCarnometerLocalDatabase();
+  final localDatabase = database ?? _FakeSplitwayLocalDatabase();
   final repository = LocalDraftRepository(
     database: localDatabase,
     installId: 'test-installation',
@@ -59,7 +59,7 @@ BootstrapBundle _buildBundle({
   );
 }
 
-class _FakeCarnometerLocalDatabase extends CarnometerLocalDatabase {
+class _FakeSplitwayLocalDatabase extends SplitwayLocalDatabase {
   final List<RouteTemplate> savedRoutes = [];
 
   @override

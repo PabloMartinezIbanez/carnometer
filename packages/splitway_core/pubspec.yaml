@@ -1,5 +1,5 @@
-name: carnometer_core
-description: Core domain and tracking engine for the Carnometer PoC.
+name: splitway_core
+description: Core domain and tracking engine for the Splitway PoC.
 version: 0.1.0
 publish_to: none
 

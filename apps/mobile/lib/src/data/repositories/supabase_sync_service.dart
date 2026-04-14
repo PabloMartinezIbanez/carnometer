@@ -1,7 +1,7 @@
-import 'package:carnometer_core/carnometer_core.dart';
+import 'package:splitway_core/splitway_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../local/carnometer_local_database.dart';
+import '../local/splitway_local_database.dart';
 
 class SupabaseSyncService {
   const SupabaseSyncService({
@@ -15,7 +15,7 @@ class SupabaseSyncService {
   bool get isEnabled => client != null;
 
   Future<void> syncPending(
-    CarnometerLocalDatabase database, {
+    SplitwayLocalDatabase database, {
     required String installId,
   }) async {
     if (client == null) {

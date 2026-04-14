@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'src/bootstrap/app_bootstrap.dart';
 import 'src/routing/app_router.dart';
 
-class CarnometerApp extends StatefulWidget {
-  const CarnometerApp({super.key});
+class SplitwayApp extends StatefulWidget {
+  const SplitwayApp({super.key});
 
   @override
-  State<CarnometerApp> createState() => _CarnometerAppState();
+  State<SplitwayApp> createState() => _SplitwayAppState();
 }
 
-class _CarnometerAppState extends State<CarnometerApp> {
+class _SplitwayAppState extends State<SplitwayApp> {
   late final Future<BootstrapBundle> _bootstrapFuture;
 
   @override
@@ -27,7 +27,7 @@ class _CarnometerAppState extends State<CarnometerApp> {
         if (snapshot.connectionState != ConnectionState.done) {
           return _buildShell(
             home: const _BootstrapScaffold(
-              title: 'Arrancando Carnometer',
+              title: 'Arrancando Splitway',
               subtitle: 'Preparando base local, mapa y sincronización opcional.',
             ),
           );
@@ -45,7 +45,7 @@ class _CarnometerAppState extends State<CarnometerApp> {
         final router = buildAppRouter(snapshot.requireData);
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
-          title: 'Carnometer',
+          title: 'Splitway',
           theme: _theme,
           routerConfig: router,
         );
@@ -56,7 +56,7 @@ class _CarnometerAppState extends State<CarnometerApp> {
   Widget _buildShell({required Widget home}) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Carnometer',
+      title: 'Splitway',
       theme: _theme,
       home: home,
     );

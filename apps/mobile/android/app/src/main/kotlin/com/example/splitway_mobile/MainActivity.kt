@@ -1,4 +1,4 @@
-package com.example.carnometer_mobile
+package com.example.splitway_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

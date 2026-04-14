@@ -1,4 +1,4 @@
-import 'package:carnometer_mobile/src/config/app_config.dart';
+import 'package:splitway_mobile/src/config/app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

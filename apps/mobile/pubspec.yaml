@@ -1,5 +1,5 @@
-name: carnometer_mobile
-description: Android-first Flutter shell for the Carnometer PoC.
+name: splitway_mobile
+description: Android-first Flutter shell for the Splitway PoC.
 publish_to: none
 version: 0.1.0+1
 
@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  carnometer_core:
-    path: ../../packages/carnometer_core
+  splitway_core:
+    path: ../../packages/splitway_core
   geolocator: ^14.0.2
   go_router: ^15.1.2
   intl: ^0.20.2

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:carnometer_core/carnometer_core.dart';
+import 'package:splitway_core/splitway_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
