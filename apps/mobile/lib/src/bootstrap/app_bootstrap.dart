@@ -7,6 +7,7 @@ import '../data/demo/demo_seed.dart';
 import '../data/local/splitway_local_database.dart';
 import '../data/repositories/local_draft_repository.dart';
 import '../data/repositories/supabase_sync_service.dart';
+import '../shared/server_connection_error.dart';
 
 class BootstrapBundle {
   const BootstrapBundle({
@@ -38,18 +39,25 @@ class AppBootstrap {
     var installId = 'local-demo-installation';
 
     if (config.hasSupabase) {
-      await Supabase.initialize(
-        url: config.supabaseUrl,
-        anonKey: config.supabaseAnonKey,
-      );
+      try {
+        await Supabase.initialize(
+          url: config.supabaseUrl,
+          anonKey: config.supabaseAnonKey,
+        );
 
-      client = Supabase.instance.client;
+        client = Supabase.instance.client;
 
-      if (client.auth.currentSession == null) {
-        await client.auth.signInAnonymously();
+        if (client.auth.currentSession == null) {
+          await client.auth.signInAnonymously();
+        }
+
+        installId = client.auth.currentUser?.id ?? installId;
+      } catch (error) {
+        if (isServerConnectionFailure(error)) {
+          throw const ServerConnectionException();
+        }
+        rethrow;
       }
-
-      installId = client.auth.currentUser?.id ?? installId;
     }
 
     final repository = LocalDraftRepository(
@@ -69,6 +77,11 @@ class AppBootstrap {
         await syncService.syncPending(database, installId: installId);
       } on PostgrestException catch (error) {
         debugPrint('Supabase sync skipped during bootstrap: ${error.message}');
+      } catch (error) {
+        if (isServerConnectionFailure(error)) {
+          throw const ServerConnectionException();
+        }
+        rethrow;
       }
     }
 

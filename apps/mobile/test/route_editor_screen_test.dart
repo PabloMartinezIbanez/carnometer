@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:splitway_core/splitway_core.dart';
 import 'package:splitway_mobile/src/bootstrap/app_bootstrap.dart';
 import 'package:splitway_mobile/src/config/app_config.dart';
@@ -186,6 +188,108 @@ void main() {
     expect(saved.rawGeometry, hasLength(2));
   });
 
+  testWidgets('canceling save dialog does not persist closure changes', (
+    tester,
+  ) async {
+    final database = _FakeSplitwayLocalDatabase();
+    final bundle = _buildBundle(database: database);
+
+    await tester.pumpWidget(_buildTestApp(RouteEditorScreen(bundle: bundle)));
+    await tester.pumpAndSettle();
+
+    await _addWaypoint(tester, latitude: 40.4168, longitude: -3.7038);
+    await _addWaypoint(tester, latitude: 40.4174, longitude: -3.7028);
+
+    await tester.tap(find.byIcon(Icons.save));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+    );
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.save));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+    );
+  });
+
+  testWidgets(
+    'editing and saving a route does not use disposed text controllers',
+    (tester) async {
+      final database = _FakeSplitwayLocalDatabase()
+        ..savedRoutes.add(_sampleRoute());
+      final bundle = _buildBundle(database: database);
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          RouteEditorScreen(bundle: bundle, editRouteId: _sampleRouteId),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Editar ruta'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.save));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).first, 'Ruta editada');
+      await tester.tap(find.widgetWithText(FilledButton, 'Actualizar'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(database.savedRoutes.single.name, 'Ruta editada');
+    },
+  );
+
+  testWidgets(
+    'shows a soft red snackbar when route preview cannot reach the server',
+    (tester) async {
+      final database = _FakeSplitwayLocalDatabase();
+      final syncService = _FakeSupabaseSyncService(
+        directionsResponse: null,
+        directionsError: const SocketException('Connection refused'),
+      );
+      final bundle = _buildBundle(database: database, syncService: syncService);
+
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_buildTestApp(RouteEditorScreen(bundle: bundle)));
+      await tester.pumpAndSettle();
+
+      await _addWaypoint(tester, latitude: 40.4168, longitude: -3.7038);
+      await _addWaypoint(tester, latitude: 40.4174, longitude: -3.7028);
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump();
+
+      expect(
+        find.text(
+          'No se pudo conectar con el servidor. Comprueba tu conexión de datos.',
+        ),
+        findsOneWidget,
+      );
+
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      final context = tester.element(find.byType(RouteEditorScreen));
+      expect(
+        snackBar.backgroundColor,
+        Theme.of(context).colorScheme.errorContainer,
+      );
+    },
+  );
+
   testWidgets('keeps editor controls accessible on a narrow viewport', (
     tester,
   ) async {
@@ -202,6 +306,9 @@ void main() {
 
     expect(find.byTooltip('Añadir punto manual'), findsNothing);
     expect(find.text('Nuevo trazado'), findsNothing);
+    expect(find.text('Distancia'), findsNothing);
+    expect(find.text('Puntos'), findsNothing);
+    expect(find.text('Sectores'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Waypoint'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Sector'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -219,6 +326,9 @@ void main() {
     expect(find.byType(DraggableScrollableSheet), findsOneWidget);
     expect(find.byTooltip('Añadir punto manual'), findsNothing);
     expect(find.text('Nuevo trazado'), findsNothing);
+    expect(find.text('Distancia'), findsNothing);
+    expect(find.text('Puntos'), findsNothing);
+    expect(find.text('Sectores'), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Waypoint'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Sector'), findsOneWidget);
   });
@@ -310,11 +420,38 @@ class _FakeSplitwayLocalDatabase extends SplitwayLocalDatabase {
   }
 }
 
+const _sampleRouteId = 'route-1';
+
+RouteTemplate _sampleRoute() {
+  return RouteTemplate(
+    id: _sampleRouteId,
+    name: 'Ruta original',
+    difficulty: RouteDifficulty.medium,
+    isClosed: false,
+    rawGeometry: const [
+      GeoPoint(latitude: 40.4168, longitude: -3.7038),
+      GeoPoint(latitude: 40.4174, longitude: -3.7028),
+    ],
+    startFinishGate: GateDefinition(
+      id: 'start-finish',
+      label: 'Salida/Meta',
+      start: const GeoPoint(latitude: 40.4165, longitude: -3.7041),
+      end: const GeoPoint(latitude: 40.4171, longitude: -3.7035),
+    ),
+    sectors: const [],
+    notes: 'Notas originales',
+    createdAt: DateTime.utc(2026, 4, 10),
+  );
+}
+
 class _FakeSupabaseSyncService extends SupabaseSyncService {
-  _FakeSupabaseSyncService({required this.directionsResponse})
-    : super(client: null, mapboxBaseUrl: 'https://api.mapbox.com');
+  _FakeSupabaseSyncService({
+    required this.directionsResponse,
+    this.directionsError,
+  }) : super(client: null, mapboxBaseUrl: 'https://api.mapbox.com');
 
   final Map<String, dynamic>? directionsResponse;
+  final Object? directionsError;
   List<GeoPoint>? requestedWaypoints;
 
   @override
@@ -323,6 +460,9 @@ class _FakeSupabaseSyncService extends SupabaseSyncService {
     String profile = 'driving',
   }) async {
     requestedWaypoints = List<GeoPoint>.from(waypoints);
+    if (directionsError != null) {
+      throw directionsError!;
+    }
     return directionsResponse;
   }
 }

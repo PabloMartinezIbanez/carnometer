@@ -2,21 +2,29 @@ import 'package:flutter/material.dart';
 
 import 'src/bootstrap/app_bootstrap.dart';
 import 'src/routing/app_router.dart';
+import 'src/shared/server_connection_error.dart';
+
+typedef BootstrapLoader = Future<BootstrapBundle> Function();
 
 class SplitwayApp extends StatefulWidget {
-  const SplitwayApp({super.key});
+  const SplitwayApp({
+    super.key,
+    this.bootstrapper = AppBootstrap.initialize,
+  });
+
+  final BootstrapLoader bootstrapper;
 
   @override
   State<SplitwayApp> createState() => _SplitwayAppState();
 }
 
 class _SplitwayAppState extends State<SplitwayApp> {
-  late final Future<BootstrapBundle> _bootstrapFuture;
+  late Future<BootstrapBundle> _bootstrapFuture;
 
   @override
   void initState() {
     super.initState();
-    _bootstrapFuture = AppBootstrap.initialize();
+    _bootstrapFuture = widget.bootstrapper();
   }
 
   @override
@@ -34,10 +42,19 @@ class _SplitwayAppState extends State<SplitwayApp> {
         }
 
         if (snapshot.hasError) {
+          final error = snapshot.error!;
+          if (error is ServerConnectionException) {
+            return _buildShell(
+              home: _ServerConnectionScaffold(
+                onRetry: _retryBootstrap,
+              ),
+            );
+          }
+
           return _buildShell(
             home: _BootstrapScaffold(
               title: 'No se pudo iniciar la app',
-              subtitle: snapshot.error.toString(),
+              subtitle: error.toString(),
             ),
           );
         }
@@ -60,6 +77,12 @@ class _SplitwayAppState extends State<SplitwayApp> {
       theme: _theme,
       home: home,
     );
+  }
+
+  void _retryBootstrap() {
+    setState(() {
+      _bootstrapFuture = widget.bootstrapper();
+    });
   }
 
   static final _theme = ThemeData(
@@ -150,6 +173,56 @@ class _BootstrapScaffold extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ServerConnectionScaffold extends StatelessWidget {
+  const _ServerConnectionScaffold({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 72,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'No se puede conectar con el servidor',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Comprueba tu conexión de datos y vuelve a intentarlo.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Reintentar'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

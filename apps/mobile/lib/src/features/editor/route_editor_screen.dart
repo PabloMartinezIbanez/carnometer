@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:splitway_core/splitway_core.dart';
 
 import '../../bootstrap/app_bootstrap.dart';
+import '../../shared/dialogs.dart';
 import '../../shared/widgets/map_bottom_sheet_scaffold.dart';
 import 'route_editor_controller.dart';
 import 'widgets/route_editor_map_panel.dart';
@@ -48,119 +49,28 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
   }
 
   Future<void> _showSaveDialog() async {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController(text: _controller.routeName);
-    final notesController = TextEditingController(text: _controller.routeNotes);
-    var selectedDifficulty = _controller.selectedDifficulty;
-    void disposeControllers() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        nameController.dispose();
-        notesController.dispose();
-      });
-    }
-
-    final confirmed = await showDialog<bool>(
+    final draft = await showDialog<_RouteSaveDialogResult>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          return AlertDialog(
-            title: Text(_isEditing ? 'Actualizar ruta' : 'Guardar ruta'),
-            content: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre de la ruta',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Introduce un nombre';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<RouteDifficulty>(
-                      initialValue: selectedDifficulty,
-                      decoration: const InputDecoration(
-                        labelText: 'Dificultad',
-                      ),
-                      items: RouteDifficulty.values
-                          .map(
-                            (difficulty) => DropdownMenuItem(
-                              value: difficulty,
-                              child: Text(difficulty.label),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setDialogState(() => selectedDifficulty = value);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      title: const Text('Circuito cerrado'),
-                      subtitle: _controller.isClosureCandidate
-                          ? const Text(
-                              'Cierre sugerido: el ultimo punto esta a menos de 30 m',
-                            )
-                          : const Text(
-                              'La ruta se guardara como abierta salvo activacion manual',
-                            ),
-                      value: _controller.isClosed,
-                      onChanged: (value) {
-                        _controller.setClosedPreference(value);
-                        setDialogState(() {});
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: notesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Notas (opcional)',
-                      ),
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (formKey.currentState?.validate() ?? false) {
-                    _controller.updateDraft(
-                      name: nameController.text,
-                      notes: notesController.text,
-                      difficulty: selectedDifficulty,
-                    );
-                    Navigator.of(dialogContext).pop(true);
-                  }
-                },
-                child: Text(_isEditing ? 'Actualizar' : 'Guardar'),
-              ),
-            ],
-          );
-        },
+      builder: (dialogContext) => _RouteSaveDialog(
+        isEditing: _isEditing,
+        initialName: _controller.routeName,
+        initialNotes: _controller.routeNotes,
+        initialDifficulty: _controller.selectedDifficulty,
+        initialIsClosed: _controller.isClosed,
+        isClosureCandidate: _controller.isClosureCandidate,
       ),
     );
 
-    disposeControllers();
-
-    if (confirmed != true) {
+    if (!mounted || draft == null) {
       return;
     }
+
+    _controller.updateDraft(
+      name: draft.name,
+      notes: draft.notes,
+      difficulty: draft.difficulty,
+    );
+    _controller.setClosedPreference(draft.isClosed);
 
     final route = await _controller.saveRoute();
     if (!mounted || route == null) {
@@ -196,12 +106,28 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
     _controller.addWaypoint(latitude, longitude);
   }
 
+  void _showPendingServerError() {
+    final message = _controller.consumePendingServerErrorMessage();
+    if (message == null) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      showSoftErrorSnackBar(context, message);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        _showPendingServerError();
+
         if (_controller.isLoading) {
           return Scaffold(
             appBar: AppBar(
@@ -242,7 +168,11 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
             ],
           ),
           body: MapBottomSheetScaffold(
-            initialChildSize: 0.15,
+            initialChildSize: 0.13,
+            handleTopSpacing: 6,
+            handleBottomSpacing: 6,
+            compactPadding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+            showDivider: false,
             background: RouteEditorMapPanel(
               config: widget.bundle.config,
               displayedGeometry: _controller.displayedGeometry,
@@ -381,6 +311,160 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
   }
 }
 
+class _RouteSaveDialogResult {
+  const _RouteSaveDialogResult({
+    required this.name,
+    required this.notes,
+    required this.difficulty,
+    required this.isClosed,
+  });
+
+  final String name;
+  final String notes;
+  final RouteDifficulty difficulty;
+  final bool isClosed;
+}
+
+class _RouteSaveDialog extends StatefulWidget {
+  const _RouteSaveDialog({
+    required this.isEditing,
+    required this.initialName,
+    required this.initialNotes,
+    required this.initialDifficulty,
+    required this.initialIsClosed,
+    required this.isClosureCandidate,
+  });
+
+  final bool isEditing;
+  final String initialName;
+  final String initialNotes;
+  final RouteDifficulty initialDifficulty;
+  final bool initialIsClosed;
+  final bool isClosureCandidate;
+
+  @override
+  State<_RouteSaveDialog> createState() => _RouteSaveDialogState();
+}
+
+class _RouteSaveDialogState extends State<_RouteSaveDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _notesController;
+  late RouteDifficulty _selectedDifficulty;
+  late bool _isClosed;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+    _notesController = TextEditingController(text: widget.initialNotes);
+    _selectedDifficulty = widget.initialDifficulty;
+    _isClosed = widget.initialIsClosed;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _RouteSaveDialogResult(
+        name: _nameController.text,
+        notes: _notesController.text,
+        difficulty: _selectedDifficulty,
+        isClosed: _isClosed,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.isEditing ? 'Actualizar ruta' : 'Guardar ruta'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre de la ruta',
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Introduce un nombre';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<RouteDifficulty>(
+                initialValue: _selectedDifficulty,
+                decoration: const InputDecoration(labelText: 'Dificultad'),
+                items: RouteDifficulty.values
+                    .map(
+                      (difficulty) => DropdownMenuItem(
+                        value: difficulty,
+                        child: Text(difficulty.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+                  setState(() => _selectedDifficulty = value);
+                },
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text('Circuito cerrado'),
+                subtitle: widget.isClosureCandidate
+                    ? const Text(
+                        'Cierre sugerido: el ultimo punto esta a menos de 30 m',
+                      )
+                    : const Text(
+                        'La ruta se guardara como abierta salvo activacion manual',
+                      ),
+                value: _isClosed,
+                onChanged: (value) => setState(() => _isClosed = value),
+                contentPadding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notesController,
+                decoration: const InputDecoration(
+                  labelText: 'Notas (opcional)',
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(widget.isEditing ? 'Actualizar' : 'Guardar'),
+        ),
+      ],
+    );
+  }
+}
+
 class _ModeButton extends StatelessWidget {
   const _ModeButton({
     required this.label,
@@ -411,7 +495,9 @@ class _ModeButton extends StatelessWidget {
               ? theme.colorScheme.primaryContainer
               : theme.colorScheme.outlineVariant,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       icon: Icon(icon),
       label: Text(label),

@@ -33,3 +33,18 @@ Future<bool> showConfirmDialog(
   );
   return result ?? false;
 }
+
+void showSoftErrorSnackBar(BuildContext context, String message) {
+  final colorScheme = Theme.of(context).colorScheme;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: colorScheme.errorContainer,
+        behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
+        closeIconColor: colorScheme.onErrorContainer,
+      ),
+    );
+}

@@ -6,6 +6,7 @@ import 'package:splitway_core/splitway_core.dart';
 
 import '../../data/repositories/local_draft_repository.dart';
 import '../../data/repositories/supabase_sync_service.dart';
+import '../../shared/server_connection_error.dart';
 
 enum RoutePreviewStatus { idle, loading, error }
 
@@ -40,6 +41,7 @@ class RouteEditorController extends ChangeNotifier {
   RoutePreviewStatus _routePreviewStatus = RoutePreviewStatus.idle;
   String _routeName = '';
   String _routeNotes = '';
+  String? _pendingServerErrorMessage;
 
   bool get isEditing => editRouteId != null;
   bool get canSave => _waypoints.length >= 2;
@@ -66,6 +68,12 @@ class RouteEditorController extends ChangeNotifier {
 
   List<GeoPoint> get displayedGeometry =>
       _snappedGeometryPreview ?? routePreviewWaypoints;
+
+  String? consumePendingServerErrorMessage() {
+    final message = _pendingServerErrorMessage;
+    _pendingServerErrorMessage = null;
+    return message;
+  }
 
   Future<void> initialize() async {
     if (isEditing) {
@@ -277,10 +285,28 @@ class RouteEditorController extends ChangeNotifier {
 
   Future<void> _resolveRoutePreview() async {
     final requestId = ++_routePreviewRequestId;
-    final payload = await syncService.requestDirections(
-      waypoints: routePreviewWaypoints,
-    );
-    final geometry = syncService.parseGeometry(payload);
+    Map<String, dynamic>? payload;
+    List<GeoPoint>? geometry;
+
+    try {
+      payload = await syncService.requestDirections(
+        waypoints: routePreviewWaypoints,
+      );
+      geometry = syncService.parseGeometry(payload);
+    } catch (error) {
+      if (requestId != _routePreviewRequestId) {
+        return;
+      }
+
+      _snappedGeometryPreview = null;
+      _routePreviewStatus = RoutePreviewStatus.error;
+      if (isServerConnectionFailure(error)) {
+        _pendingServerErrorMessage =
+            'No se pudo conectar con el servidor. Comprueba tu conexión de datos.';
+      }
+      notifyListeners();
+      return;
+    }
 
     if (requestId != _routePreviewRequestId) {
       return;

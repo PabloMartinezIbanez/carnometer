@@ -7,6 +7,7 @@ import '../../bootstrap/app_bootstrap.dart';
 import '../../shared/widgets/difficulty_badge.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/inline_info_chip.dart';
+import 'route_metrics.dart';
 
 class MyRoutesScreen extends StatefulWidget {
   const MyRoutesScreen({required this.bundle, super.key});
@@ -104,6 +105,10 @@ class _RouteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('d MMM yyyy', 'es_ES');
+    final metrics = RouteMetrics.fromGeometry(
+      geometry: route.effectiveGeometry,
+      sectorCount: route.sectors.length,
+    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -134,7 +139,7 @@ class _RouteCard extends StatelessWidget {
                 children: [
                   InlineInfoChip(
                     icon: Icons.straighten,
-                    label: '${route.effectiveGeometry.length} puntos',
+                    label: '${metrics.distanceKm.toStringAsFixed(2)} km',
                   ),
                   InlineInfoChip(
                     icon: Icons.flag,
