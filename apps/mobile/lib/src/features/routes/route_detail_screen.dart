@@ -173,125 +173,136 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
             ),
           ],
         ),
-        expandedChildBuilder: (scrollController) => ListView(
-          controller: scrollController,
+        expandedChild: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _MetricCard(
-                  label: 'Distancia',
-                  value: '${metrics.distanceKm.toStringAsFixed(2)} km',
-                ),
-                _MetricCard(label: 'Puntos', value: '${metrics.pointCount}'),
-                _MetricCard(label: 'Sectores', value: '${metrics.sectorCount}'),
-                if (metrics.elevationDeltaM != null)
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
                   _MetricCard(
-                    label: 'Desnivel',
-                    value: '${metrics.elevationDeltaM!.toStringAsFixed(0)} m',
+                    label: 'Distancia',
+                    value: '${metrics.distanceKm.toStringAsFixed(2)} km',
                   ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                DifficultyBadge(difficulty: route.difficulty),
-                InlineInfoChip(
-                  icon: route.isClosed ? Icons.loop : Icons.trending_flat,
-                  label: route.isClosed ? 'Circuito' : 'Abierta',
-                ),
-                InlineInfoChip(
-                  icon: Icons.calendar_today,
-                  label: dateFormat.format(route.createdAt),
-                ),
-              ],
-            ),
-            if (route.notes != null && route.notes!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.notes,
-                      size: 18,
-                      color: theme.colorScheme.onSurfaceVariant,
+                  _MetricCard(label: 'Puntos', value: '${metrics.pointCount}'),
+                  _MetricCard(
+                    label: 'Sectores',
+                    value: '${metrics.sectorCount}',
+                  ),
+                  if (metrics.elevationDeltaM != null)
+                    _MetricCard(
+                      label: 'Desnivel',
+                      value:
+                          '${metrics.elevationDeltaM!.toStringAsFixed(0)} m',
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        route.notes!,
-                        style: theme.textTheme.bodyMedium,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  DifficultyBadge(difficulty: route.difficulty),
+                  InlineInfoChip(
+                    icon: route.isClosed ? Icons.loop : Icons.trending_flat,
+                    label: route.isClosed ? 'Circuito' : 'Abierta',
+                  ),
+                  InlineInfoChip(
+                    icon: Icons.calendar_today,
+                    label: dateFormat.format(route.createdAt),
+                  ),
+                ],
+              ),
+              if (route.notes != null && route.notes!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.notes,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          route.notes!,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (_sessions.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Historial de Tiempos',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                ..._sessions.map((session) {
+                  final duration = session.endedAt.difference(
+                    session.startedAt,
+                  );
+                  final sessionDateFormat = DateFormat(
+                    'd MMM yyyy, HH:mm',
+                    'es_ES',
+                  );
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _formatDuration(duration),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  sessionDateFormat.format(session.startedAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${session.sectorSummaries.length} sectores',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  );
+                }),
+              ],
             ],
-            if (_sessions.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Text('Historial de Tiempos', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              ..._sessions.map((session) {
-                final duration = session.endedAt.difference(session.startedAt);
-                final sessionDateFormat = DateFormat(
-                  'd MMM yyyy, HH:mm',
-                  'es_ES',
-                );
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _formatDuration(duration),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontFamily: 'monospace',
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                sessionDateFormat.format(session.startedAt),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '${session.sectorSummaries.length} sectores',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ],
+          ),
         ),
       ),
     );

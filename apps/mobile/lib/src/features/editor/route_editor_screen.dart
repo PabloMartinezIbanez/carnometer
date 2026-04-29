@@ -208,101 +208,103 @@ class _RouteEditorScreenState extends State<RouteEditorScreen> {
                 ),
               ],
             ),
-            expandedChildBuilder: (scrollController) => ListView(
-              controller: scrollController,
+            expandedChild: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _StatCard(
-                      label: 'Distancia',
-                      value:
-                          '${_controller.totalDistanceKm().toStringAsFixed(2)} km',
-                    ),
-                    _StatCard(
-                      label: 'Puntos',
-                      value: '${_controller.waypoints.length}',
-                    ),
-                    _StatCard(
-                      label: 'Sectores',
-                      value: '${_controller.sectorPoints.length}',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FilterChip(
-                      label: Text(
-                        _controller.isClosed
-                            ? 'Circuito cerrado'
-                            : 'Ruta abierta',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _StatCard(
+                        label: 'Distancia',
+                        value:
+                            '${_controller.totalDistanceKm().toStringAsFixed(2)} km',
                       ),
-                      selected: _controller.isClosed,
-                      onSelected: _controller.setClosedPreference,
-                    ),
-                    if (_controller.isClosureCandidate)
-                      const Chip(
-                        avatar: Icon(Icons.loop, size: 18),
-                        label: Text('Cierre sugerido (< 30 m)'),
+                      _StatCard(
+                        label: 'Puntos',
+                        value: '${_controller.waypoints.length}',
                       ),
-                    if (_controller.isRoutingPreviewLoading)
-                      const Chip(
-                        avatar: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        label: Text('Ajustando por carretera'),
-                      )
-                    else if (_controller.routePreviewStatus ==
-                            RoutePreviewStatus.error &&
-                        _controller.waypoints.length >= 2)
-                      const Chip(
-                        avatar: Icon(Icons.warning_amber_rounded, size: 18),
-                        label: Text('Preview sin Mapbox, usando trazado base'),
+                      _StatCard(
+                        label: 'Sectores',
+                        value: '${_controller.sectorPoints.length}',
                       ),
-                  ],
-                ),
-                if (_controller.waypoints.isNotEmpty ||
-                    _controller.sectorPoints.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 42,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        ..._controller.waypoints.asMap().entries.map(
-                          (entry) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: _PointChip(
-                              badgeLabel: '${entry.key + 1}',
-                              title:
-                                  '${entry.value.latitude.toStringAsFixed(4)}, ${entry.value.longitude.toStringAsFixed(4)}',
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        ..._controller.sectorPoints.asMap().entries.map(
-                          (entry) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: _PointChip(
-                              badgeLabel: 'S${entry.key + 1}',
-                              title:
-                                  '${entry.value.latitude.toStringAsFixed(4)}, ${entry.value.longitude.toStringAsFixed(4)}',
-                              color: const Color(0xFFEA580C),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilterChip(
+                        label: Text(
+                          _controller.isClosed
+                              ? 'Circuito cerrado'
+                              : 'Ruta abierta',
+                        ),
+                        selected: _controller.isClosed,
+                        onSelected: _controller.setClosedPreference,
+                      ),
+                      if (_controller.isClosureCandidate)
+                        const Chip(
+                          avatar: Icon(Icons.loop, size: 18),
+                          label: Text('Cierre sugerido (< 30 m)'),
+                        ),
+                      if (_controller.isRoutingPreviewLoading)
+                        const Chip(
+                          avatar: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          label: Text('Ajustando por carretera'),
+                        )
+                      else if (_controller.routePreviewStatus ==
+                              RoutePreviewStatus.error &&
+                          _controller.waypoints.length >= 2)
+                        const Chip(
+                          avatar: Icon(Icons.warning_amber_rounded, size: 18),
+                          label: Text('Preview sin Mapbox, usando trazado base'),
+                        ),
+                    ],
+                  ),
+                  if (_controller.waypoints.isNotEmpty ||
+                      _controller.sectorPoints.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 42,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ..._controller.waypoints.asMap().entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: _PointChip(
+                                badgeLabel: '${entry.key + 1}',
+                                title:
+                                    '${entry.value.latitude.toStringAsFixed(4)}, ${entry.value.longitude.toStringAsFixed(4)}',
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                          ..._controller.sectorPoints.asMap().entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: _PointChip(
+                                badgeLabel: 'S${entry.key + 1}',
+                                title:
+                                    '${entry.value.latitude.toStringAsFixed(4)}, ${entry.value.longitude.toStringAsFixed(4)}',
+                                color: const Color(0xFFEA580C),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
